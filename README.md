@@ -15,7 +15,7 @@
 <p align="center">
   <a href="https://sorry-cypress.dev">https://sorry-cypress.dev</a> 
  | 
-  <a href="https://currents.dev/?utm_source=github_readme">https://currents.dev</a>
+  <a href="https://currents.dev/cypress-to-playwright?utm_source=github_readme">https://currents.dev</a>
 </p>
 
 **[Sorry Cypress](https://sorry-cypress.dev)** is open-source, free alternative to Cypress Dashboard that unlocks unlimited parallelization, test recordings, integration with GitHub, Slack and more.
