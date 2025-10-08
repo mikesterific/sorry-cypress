@@ -1,0 +1,28 @@
+{
+  "instances": [
+    {
+      "name": "production",
+      "url": "https://prod.example.com",
+      "enabled": true,
+      "description": "Production environment"
+    },
+    {
+      "name": "staging",
+      "url": "https://staging.example.com",
+      "enabled": true,
+      "description": "Staging environment"
+    },
+    {
+      "name": "development",
+      "url": "https://dev.example.com",
+      "enabled": false,
+      "description": "Development environment"
+    },
+    {
+      "name": "scale-computing",
+      "url": "https://10.100.24.31:443",
+      "enabled": true,
+      "description": "Scale Computing node"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "name": "cypress-parallel-example",
+  "version": "1.0.0",
+  "description": "Example Cypress project for parallel instance testing",
+  "scripts": {
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "cypress:run:parallel": "cypress run --parallel --record --key any-key"
+  },
+  "keywords": [
+    "cypress",
+    "testing",
+    "e2e",
+    "parallel"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "cypress": "^12.17.0"
+  }
+}

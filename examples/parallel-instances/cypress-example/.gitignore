@@ -1,0 +1,11 @@
+node_modules/
+cypress/videos/
+cypress/screenshots/
+cypress/downloads/
+cypress/performance-metrics/
+cypress.env.json
+.DS_Store
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

@@ -1,0 +1,100 @@
+# Example GitLab CI Configuration for Parallel Cypress Testing
+# Place this content in your .gitlab-ci.yml file
+
+stages:
+  - test
+  - report
+
+variables:
+  SORRY_CYPRESS_URL: "http://sorry-cypress:1234"
+  CYPRESS_PROJECT_ID: "my-parallel-project"
+  BUILD_ID: "$CI_PIPELINE_ID"
+
+# Base configuration for all Cypress jobs
+.cypress_base:
+  stage: test
+  image: cypress/included:12.17.0
+  before_script:
+    - cd examples/parallel-instances/cypress-example
+    - npm ci
+  artifacts:
+    when: always
+    paths:
+      - examples/parallel-instances/cypress-example/cypress/videos
+      - examples/parallel-instances/cypress-example/cypress/screenshots
+    expire_in: 7 days
+
+# Parallel test jobs for different instances
+cypress:production:
+  extends: .cypress_base
+  variables:
+    CYPRESS_BASE_URL: "https://prod.example.com"
+    INSTANCE_NAME: "production"
+  script:
+    - npx cypress run
+        --parallel
+        --record
+        --key $CYPRESS_RECORD_KEY
+        --ci-build-id $BUILD_ID
+        --tag production
+  parallel: 3  # Run 3 parallel containers for this instance
+
+cypress:staging:
+  extends: .cypress_base
+  variables:
+    CYPRESS_BASE_URL: "https://staging.example.com"
+    INSTANCE_NAME: "staging"
+  script:
+    - npx cypress run
+        --parallel
+        --record
+        --key $CYPRESS_RECORD_KEY
+        --ci-build-id $BUILD_ID
+        --tag staging
+  parallel: 3
+
+cypress:scale-computing:
+  extends: .cypress_base
+  variables:
+    CYPRESS_BASE_URL: "https://10.100.24.31:443"
+    INSTANCE_NAME: "scale-computing"
+  script:
+    - npx cypress run
+        --parallel
+        --record
+        --key $CYPRESS_RECORD_KEY
+        --ci-build-id $BUILD_ID
+        --tag scale-computing
+  parallel: 2
+
+# Optional: Generate test report
+generate_report:
+  stage: report
+  image: node:18
+  needs:
+    - cypress:production
+    - cypress:staging
+    - cypress:scale-computing
+  script:
+    - echo "All tests completed for build $BUILD_ID"
+    - echo "View results at $DASHBOARD_URL"
+  when: always
+
+# Optional: Run only on schedule for nightly tests
+nightly_tests:
+  extends: .cypress_base
+  parallel:
+    matrix:
+      - INSTANCE_NAME: production
+        CYPRESS_BASE_URL: "https://prod.example.com"
+      - INSTANCE_NAME: staging
+        CYPRESS_BASE_URL: "https://staging.example.com"
+  script:
+    - npx cypress run
+        --parallel
+        --record
+        --key $CYPRESS_RECORD_KEY
+        --ci-build-id nightly-$BUILD_ID
+        --tag $INSTANCE_NAME
+  only:
+    - schedules

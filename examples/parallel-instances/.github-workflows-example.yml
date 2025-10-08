@@ -1,0 +1,103 @@
+# Example GitHub Actions Workflow for Parallel Cypress Testing
+# Place this file in .github/workflows/cypress-parallel.yml in your repository
+
+name: Cypress Parallel Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run tests daily at 2 AM
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      instances:
+        description: 'Instances to test (comma-separated)'
+        required: false
+        default: 'production,staging'
+
+jobs:
+  parallel-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        instance:
+          - name: production
+            url: https://prod.example.com
+          - name: staging
+            url: https://staging.example.com
+          - name: scale-computing
+            url: https://10.100.24.31:443
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: examples/parallel-instances/cypress-example/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: examples/parallel-instances/cypress-example
+        run: npm ci
+      
+      - name: Run Cypress tests
+        working-directory: examples/parallel-instances/cypress-example
+        env:
+          CYPRESS_BASE_URL: ${{ matrix.instance.url }}
+          CYPRESS_API_URL: ${{ secrets.SORRY_CYPRESS_URL }}
+          CYPRESS_PROJECT_ID: my-parallel-project
+          CI_BUILD_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          npx cypress run \
+            --parallel \
+            --record \
+            --key ${{ secrets.CYPRESS_RECORD_KEY }} \
+            --ci-build-id $CI_BUILD_ID \
+            --tag ${{ matrix.instance.name }}
+      
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: cypress-screenshots-${{ matrix.instance.name }}
+          path: examples/parallel-instances/cypress-example/cypress/screenshots
+          retention-days: 7
+      
+      - name: Upload videos
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: cypress-videos-${{ matrix.instance.name }}
+          path: examples/parallel-instances/cypress-example/cypress/videos
+          retention-days: 7
+
+  # Optional: Send notification after all tests complete
+  notify:
+    needs: parallel-tests
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Send Slack notification
+        if: env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -X POST $SLACK_WEBHOOK_URL \
+            -H 'Content-Type: application/json' \
+            -d '{
+              "text": "Cypress parallel tests completed",
+              "blocks": [{
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*Cypress Tests*\nStatus: ${{ needs.parallel-tests.result }}\nRun: ${{ github.run_id }}"
+                }
+              }]
+            }'

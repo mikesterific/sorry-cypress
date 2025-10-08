@@ -1,0 +1,90 @@
+version: '3.8'
+
+# This docker-compose file runs Cypress tests in parallel against multiple instances
+# Usage: BUILD_ID=$(date +%s) docker-compose -f docker-compose.parallel.yml up
+
+services:
+  # Cypress runner for instance 1
+  cypress-instance1:
+    image: cypress/included:12.17.0
+    container_name: cypress-instance1
+    environment:
+      - CYPRESS_BASE_URL=https://instance1.example.com
+      - CYPRESS_API_URL=http://host.docker.internal:1234
+      - CYPRESS_PROJECT_ID=my-parallel-project
+      - CI_BUILD_ID=${BUILD_ID:-default-build}
+      - INSTANCE_NAME=instance1
+    command: >
+      cypress run 
+      --parallel 
+      --record 
+      --key any-key 
+      --ci-build-id ${BUILD_ID:-default-build}
+      --tag instance1
+    volumes:
+      - ./cypress-example:/e2e
+    working_dir: /e2e
+    networks:
+      - cypress-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Cypress runner for instance 2
+  cypress-instance2:
+    image: cypress/included:12.17.0
+    container_name: cypress-instance2
+    environment:
+      - CYPRESS_BASE_URL=https://instance2.example.com
+      - CYPRESS_API_URL=http://host.docker.internal:1234
+      - CYPRESS_PROJECT_ID=my-parallel-project
+      - CI_BUILD_ID=${BUILD_ID:-default-build}
+      - INSTANCE_NAME=instance2
+    command: >
+      cypress run 
+      --parallel 
+      --record 
+      --key any-key 
+      --ci-build-id ${BUILD_ID:-default-build}
+      --tag instance2
+    volumes:
+      - ./cypress-example:/e2e
+    working_dir: /e2e
+    networks:
+      - cypress-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Cypress runner for instance 3
+  cypress-instance3:
+    image: cypress/included:12.17.0
+    container_name: cypress-instance3
+    environment:
+      - CYPRESS_BASE_URL=https://instance3.example.com
+      - CYPRESS_API_URL=http://host.docker.internal:1234
+      - CYPRESS_PROJECT_ID=my-parallel-project
+      - CI_BUILD_ID=${BUILD_ID:-default-build}
+      - INSTANCE_NAME=instance3
+    command: >
+      cypress run 
+      --parallel 
+      --record 
+      --key any-key 
+      --ci-build-id ${BUILD_ID:-default-build}
+      --tag instance3
+    volumes:
+      - ./cypress-example:/e2e
+    working_dir: /e2e
+    networks:
+      - cypress-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  cypress-network:
+    driver: bridge
+
+# Notes:
+# 1. All containers use the same BUILD_ID to enable test distribution
+# 2. host.docker.internal allows containers to reach services on the host
+# 3. Tags help identify which instance ran which tests
+# 4. For different build IDs per instance, change ${BUILD_ID} to unique values
