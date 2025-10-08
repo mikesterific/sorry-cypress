@@ -5,6 +5,7 @@
   "scripts": {
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
+    "cypress:run:cloud": "npx cypress-cloud run --parallel --record --key any-key",
     "cypress:run:parallel": "cypress run --parallel --record --key any-key"
   },
   "keywords": [
@@ -16,6 +17,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "cypress": "^12.17.0"
+    "cypress": "^13.17.0",
+    "cypress-cloud": "^1.9.0"
   }
 }
