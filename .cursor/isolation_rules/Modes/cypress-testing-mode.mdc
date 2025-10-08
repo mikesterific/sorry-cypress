@@ -1,0 +1,388 @@
+# MEMORY BANK CYPRESS TESTING MODE
+
+Your role is to enhance browser-recorded tests with component intelligence and memory bank patterns using the Sequential Processing Architecture.
+
+```mermaid
+graph TD
+    Start["🚀 START CYPRESS TESTING MODE"] --> ReadDocs["📚 Read Reference Documents<br>.cursor/rules/isolation_rules/Core/command-execution.mdc"]
+    
+    %% Initialization
+    ReadDocs --> CheckMemBank{"🧩 Verify<br>Memory Bank<br>from tasks.md"}
+    
+    %% Sequential Processing Flow
+    CheckMemBank -->|"Valid"| LoadMemBank["📋 PHASE 1: Load Memory Bank Context<br>- cypress-testing-patterns.md<br>- techContext.md<br>- systemPatterns.md<br>- centralized locators"]
+    
+    LoadMemBank --> StartMCPSession["🎬 PHASE 2: MCP Session Management<br>- Start browser-event-recorder<br>- Configure data-testid priority (1.5)<br>- Guide user through recording"]
+    
+    StartMCPSession --> UserInteracts["👤 User Performs Actions<br>(clicks, inputs, navigation)"]
+    UserInteracts --> StopMCPSession["⏹️ Stop MCP Recording<br>- Retrieve session data<br>- Get generated baseline test"]
+    
+    StopMCPSession --> ComponentAnalysis["🔍 PHASE 3: Component Analysis<br>- Parse Vue component file<br>- Analyze methods & computed<br>- Identify testable interactions<br>- Predict state changes"]
+    
+    ComponentAnalysis --> TestEnhancement["⚡ PHASE 4: Test Enhancement<br>- Enhance MCP baseline<br>- Add intelligent assertions<br>- Apply established patterns<br>- Integrate locators & commands"]
+    
+    TestEnhancement --> ValidationOutput["✅ PHASE 5: Validation<br>- Pattern compliance check<br>- Quality standards validation<br>- Coverage contribution<br>- Data-testid verification"]
+    
+    ValidationOutput --> DeliverTest["🎯 Deliver Enhanced Test<br>Production-ready Cypress test"]
+    
+    %% Error Handling
+    CheckMemBank -->|"Invalid"| AbortMode["⛔ ABORT MODE<br>Memory Bank Required"]
+    
+    %% Command Execution
+    ComponentAnalysis & TestEnhancement --> CommandExec["⚙️ COMMAND EXECUTION<br>.cursor/rules/isolation_rules/Core/command-execution.mdc"]
+    CommandExec --> DocCommands["📝 Document Commands<br>& Results"]
+    
+    %% Implementation Documentation
+    DocCommands -.-> DocTemplate["📋 BUILD DOC:<br>- MCP Session Data<br>- Component Analysis<br>- Test Enhancements<br>- Validation Results"]
+    
+    %% Completion & Transition
+    DeliverTest --> UpdateTasks["📝 Update tasks.md<br>with completion status"]
+    UpdateTasks --> Transition["⏭️ NEXT MODE:<br>REFLECT MODE"]
+    
+    %% Styling
+    style Start fill:#4da6ff,stroke:#0066cc,color:white
+    style ReadDocs fill:#80bfff,stroke:#4da6ff,color:black
+    style CheckMemBank fill:#d94dbb,stroke:#a3378a,color:white
+    style LoadMemBank fill:#4dbb5f,stroke:#36873f,color:white
+    style StartMCPSession fill:#ffa64d,stroke:#cc7a30,color:white
+    style ComponentAnalysis fill:#ff5555,stroke:#cc0000,color:white
+    style TestEnhancement fill:#d971ff,stroke:#a33bc2,color:white
+    style ValidationOutput fill:#4dbbbb,stroke:#368787,color:white
+    style DeliverTest fill:#5fd94d,stroke:#3da336,color:white
+    style CommandExec fill:#d971ff,stroke:#a33bc2,color:white
+    style Transition fill:#5fd94d,stroke:#3da336,color:white
+```
+
+## IMPLEMENTATION STEPS
+
+### Step 1: READ COMMAND EXECUTION RULES
+```
+read_file({
+  target_file: ".cursor/rules/isolation_rules/Core/command-execution.mdc",
+  should_read_entire_file: true
+})
+```
+
+### Step 2: LOAD MEMORY BANK CONTEXT
+```
+read_file({
+  target_file: "memory-bank/tasks.md",
+  should_read_entire_file: true
+})
+
+read_file({
+  target_file: "memory-bank/cypress-testing-patterns.md",
+  should_read_entire_file: true
+})
+
+read_file({
+  target_file: "memory-bank/techContext.md", 
+  should_read_entire_file: true
+})
+
+read_file({
+  target_file: "memory-bank/systemPatterns.md",
+  should_read_entire_file: true
+})
+
+read_file({
+  target_file: "client/cypress/e2e/locators/locators.js",
+  should_read_entire_file: true
+})
+```
+
+### Step 3: VERIFY BROWSER-EVENT-RECORDER MCP
+```
+# Check MCP configuration and availability
+# Verify tools: recording/start, recording/stop, sessions/get, test/generate
+```
+
+## SEQUENTIAL PROCESSING PHASES
+
+### PHASE 1: Memory Bank Context Loading
+Load all established patterns and component knowledge:
+
+```javascript
+const memoryBankContext = {
+  testingPatterns: cypressTestingPatterns,     // Established Cypress patterns
+  componentKnowledge: techContext,             // Vue component insights  
+  systemPatterns: systemPatterns,              // Architectural patterns
+  centrizedLocators: locatorsSystem,           // LOCATORS object
+  customCommands: ['setupTestEnvironment', 'cleanupEnvironment', 'login'],
+  qualityStandards: { minCoverage: 80, noFailingTests: true }
+};
+```
+
+### PHASE 2: MCP Session Management
+Manage browser-event-recorder MCP lifecycle:
+
+**Start Recording:**
+```javascript
+const sessionConfig = {
+  dataTestIdPriority: 1.5,        // Prioritize data-testid attributes
+  framework: 'cypress',            // Output Cypress TypeScript code
+  outputFormat: 'typescript',      // TypeScript format
+  includeAssertions: true,         // Include basic assertions
+  includeComments: true            // Add explanatory comments
+};
+
+const sessionId = await mcpTool('recording/start', sessionConfig);
+```
+
+**User Interaction Phase:**
+- Guide user to perform key interactions on the component
+- Focus on testing critical user workflows
+- Capture clicks, inputs, form submissions, navigation
+
+**Stop Recording & Retrieve:**
+```javascript
+await mcpTool('recording/stop', { sessionId });
+const sessionData = await mcpTool('sessions/get', { sessionId });
+const baselineTest = await mcpTool('test/generate', { sessionId });
+```
+
+### PHASE 3: Component Analysis
+Parse target Vue component to understand behavior:
+
+**Component Structure Analysis:**
+```javascript
+const componentAnalysis = {
+  // Vue Options API structure
+  methods: extractVueMethods(componentFile),
+  computed: extractVueComputed(componentFile), 
+  data: extractVueData(componentFile),
+  props: extractVueProps(componentFile),
+  
+  // Testable interactions
+  clickHandlers: identifyClickHandlers(),
+  formHandlers: identifyFormHandlers(), 
+  inputHandlers: identifyInputHandlers(),
+  
+  // State change predictions
+  stateChanges: predictStateChanges(),
+  sideEffects: analyzeSideEffects(),
+  apiCalls: identifyApiCalls(),
+  socketEvents: identifySocketEvents(),
+  
+  // UI update patterns
+  conditionalRendering: analyzeConditionalRendering(),
+  listRendering: analyzeListRendering(),
+  dynamicClasses: analyzeDynamicClasses()
+};
+```
+
+### PHASE 4: Test Enhancement
+Enhance MCP-generated baseline with component intelligence:
+
+**Intelligent Assertion Generation:**
+```javascript
+const enhancedTest = {
+  // Established imports and setup
+  imports: [
+    "import { LOCATORS } from '../../locators/locators';",
+    "import '../../../support/commands';"
+  ],
+  
+  // Custom command integration
+  setup: [
+    "cy.setupTestEnvironment();",
+    "cy.cleanupEnvironment();"
+  ],
+  
+  // Enhanced test scenarios
+  testCases: enhanceTestCases(baselineTest, componentAnalysis),
+  
+  // Intelligent assertions based on component behavior
+  assertions: generateIntelligentAssertions(componentAnalysis),
+  
+  // Integration with centralized locators
+  locators: integrateWithCentralizedLocators(baselineTest),
+  
+  // Proper cleanup
+  cleanup: ["cy.cleanupEnvironment();"]
+};
+```
+
+**Pattern Application:**
+- Apply established naming conventions (XX.x - Feature Name - Test Suite)
+- Include proper error handling for known issues (noVNC, postMessage, i18n)
+- Use custom commands for setup/cleanup
+- Follow test organization patterns
+
+### PHASE 5: Quality Validation
+Ensure enhanced tests meet all standards:
+
+**Pattern Compliance Validation:**
+```javascript
+const validation = {
+  // Naming conventions
+  namingConventions: validateNamingPatterns(enhancedTest),
+  
+  // Import patterns  
+  imports: validateImportPatterns(enhancedTest),
+  
+  // Custom command usage
+  customCommands: validateCustomCommandUsage(enhancedTest),
+  
+  // Locator integration
+  locatorIntegration: validateLocatorUsage(enhancedTest),
+  
+  // Coverage contribution
+  coverageContribution: estimateCoverageImpact(enhancedTest),
+  
+  // Quality standards
+  qualityStandards: validateQualityRequirements(enhancedTest)
+};
+```
+
+**Data-TestID Validation:**
+- Verify MCP's 1.5 priority factor is leveraged
+- Suggest missing data-testid attributes
+- Validate existing data-testid usage patterns
+
+## MCP INTEGRATION PATTERNS
+
+### Session Lifecycle Management
+```javascript
+// Session Creation
+const session = {
+  id: await mcpTool('recording/start', config),
+  status: 'recording',
+  startTime: Date.now()
+};
+
+// Session Monitoring
+const sessionStatus = await mcpTool('server/status');
+const sessionMetrics = await mcpTool('server/metrics');
+
+// Session Completion
+await mcpTool('recording/stop', { sessionId: session.id });
+const results = await mcpTool('sessions/get', { sessionId: session.id });
+```
+
+### Error Handling Strategies
+- **MCP Connection Issues**: Provide fallback manual test generation
+- **Session Failures**: Guidance for session recovery or restart
+- **Component Analysis Errors**: Use existing patterns as fallbacks
+- **Enhancement Failures**: Deliver baseline test with warnings
+
+## COMPONENT ANALYSIS ALGORITHMS
+
+### Vue Component Parsing
+**Method Analysis:**
+```javascript
+function analyzeVueMethods(componentFile) {
+  return {
+    eventHandlers: extractEventHandlers(),    // @click, @input, @submit
+    apiMethods: extractApiMethods(),          // HTTP calls, socket events  
+    stateMutations: extractStateMutations(),  // data property changes
+    computedDependencies: extractComputedDeps() // computed property dependencies
+  };
+}
+```
+
+**Interaction Prediction:**
+```javascript
+function predictTestableInteractions(componentAnalysis) {
+  return {
+    userActions: predictUserActions(),        // Buttons, inputs, forms
+    stateVerification: predictStateChanges(), // Data changes to verify
+    uiUpdates: predictUIUpdates(),           // DOM changes to assert
+    sideEffects: predictSideEffects()        // API calls, events to expect
+  };
+}
+```
+
+## TEST ENHANCEMENT TEMPLATES
+
+### Assertion Enhancement Patterns
+```javascript
+// Basic MCP assertion
+cy.get('[data-testid="button"]').click();
+
+// Enhanced with component intelligence
+cy.get(LOCATORS.submitButton).click();
+cy.get(LOCATORS.loadingSpinner).should('be.visible');  // State change assertion
+cy.get(LOCATORS.successMessage).should('contain', 'Saved successfully'); // Expected outcome
+```
+
+### Pattern Integration Examples
+```javascript
+// Apply established test structure
+describe('XX.x - Component Name - Test Suite', () => {
+  before(() => {
+    cy.setupTestEnvironment();
+  });
+  
+  beforeEach(() => {
+    cy.cleanupEnvironment();
+  });
+  
+  // Enhanced test cases with component intelligence
+  it('XX.1.1: Should handle user interaction with proper state changes', () => {
+    // MCP-recorded actions + intelligent assertions
+  });
+});
+```
+
+## VERIFICATION CHECKLIST
+
+Before delivering enhanced test, verify:
+- ✅ **MCP Integration**: Session successfully managed and data retrieved
+- ✅ **Component Analysis**: Vue component properly parsed and understood  
+- ✅ **Test Enhancement**: Meaningful improvements made to baseline
+- ✅ **Pattern Compliance**: Follows all established Cypress testing patterns
+- ✅ **Quality Standards**: Meets 80% coverage and no failing tests requirements
+- ✅ **Locator Integration**: Uses centralized LOCATORS object appropriately
+- ✅ **Custom Commands**: Includes proper setup/cleanup commands
+- ✅ **Data-TestID Usage**: Leverages MCP's 1.5 priority factor effectively
+
+## OUTPUT DELIVERY
+
+### Enhanced Test Structure
+```typescript
+// Complete enhanced Cypress test file
+import { LOCATORS } from '../../locators/locators';
+import '../../../support/commands';
+
+describe('XX.x - [ComponentName] - Enhanced Test Suite', () => {
+  before(() => {
+    cy.setupTestEnvironment();
+  });
+
+  beforeEach(() => {
+    cy.cleanupEnvironment();
+  });
+
+  // Test cases enhanced with component intelligence
+  // Intelligent assertions based on component behavior
+  // Proper error handling and edge case coverage
+  
+  after(() => {
+    cy.cleanupEnvironment();
+  });
+});
+```
+
+### Documentation Output
+Provide comprehensive documentation:
+- **MCP Session Summary**: Recording details and captured events
+- **Component Analysis Results**: Identified behaviors and interactions
+- **Enhancement Details**: Specific improvements made to baseline test
+- **Pattern Compliance Report**: How test follows established conventions
+- **Usage Instructions**: How to run and maintain the enhanced test
+
+## MODE TRANSITION
+
+Upon completion:
+```
+"Enhanced Cypress test generation complete. 
+MCP session processed, component analyzed, and test enhanced with intelligent assertions.
+Enhanced test follows all established patterns and meets quality standards.
+
+NEXT MODE: REFLECT MODE - Review test enhancement results and document lessons learned"
+```
+description:
+globs:
+alwaysApply: true
+---

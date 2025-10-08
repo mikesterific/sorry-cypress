@@ -1,0 +1,265 @@
+# Visual Process Map for CYPRESS TESTING MODE (Sequential Processing Architecture)
+
+This document provides the detailed visual process map for the Cypress Testing Mode, implementing the Sequential Processing Architecture designed in the creative phase.
+
+```mermaid
+graph TB
+    subgraph "🚀 CYPRESS TESTING MODE - SEQUENTIAL PROCESSING"
+        
+        subgraph "📋 PHASE 1: MEMORY BANK CONTEXT LOADING"
+            LoadContext["🔍 Load Context Files<br>- cypress-testing-patterns.md<br>- techContext.md<br>- systemPatterns.md<br>- centralized locators"]
+            ValidateContext["✅ Validate Context<br>- Check file accessibility<br>- Verify pattern completeness<br>- Confirm locator availability"]
+            ContextReady["📚 Context Ready<br>Memory Bank knowledge loaded"]
+            
+            LoadContext --> ValidateContext
+            ValidateContext --> ContextReady
+        end
+        
+        subgraph "🎬 PHASE 2: MCP SESSION MANAGEMENT"
+            CheckMCP["🔍 Verify MCP Availability<br>browser-event-recorder status"]
+            ConfigSession["⚙️ Configure Session<br>- dataTestIdPriority: 1.5<br>- framework: cypress<br>- outputFormat: typescript"]
+            StartRecording["▶️ Start Recording<br>mcpTool('recording/start')"]
+            GuideUser["👤 Guide User Actions<br>- Focus on key interactions<br>- Critical user workflows<br>- Component behavior testing"]
+            UserPerforms["🖱️ User Performs Actions<br>clicks, inputs, navigation"]
+            StopRecording["⏹️ Stop Recording<br>mcpTool('recording/stop')"]
+            RetrieveSession["📥 Retrieve Session<br>mcpTool('sessions/get')<br>mcpTool('test/generate')"]
+            
+            CheckMCP --> ConfigSession
+            ConfigSession --> StartRecording
+            StartRecording --> GuideUser
+            GuideUser --> UserPerforms
+            UserPerforms --> StopRecording
+            StopRecording --> RetrieveSession
+        end
+        
+        subgraph "🔍 PHASE 3: COMPONENT ANALYSIS"
+            IdentifyComponent["🎯 Identify Target Component<br>From user context or selection"]
+            ParseComponent["📖 Parse Vue Component<br>- Methods analysis<br>- Computed properties<br>- Data structure<br>- Props definition"]
+            AnalyzeBehavior["🧠 Analyze Behavior<br>- Event handlers<br>- State mutations<br>- API interactions<br>- Side effects"]
+            PredictInteractions["🔮 Predict Testable Interactions<br>- User actions<br>- State verifications<br>- UI updates<br>- Expected outcomes"]
+            
+            IdentifyComponent --> ParseComponent
+            ParseComponent --> AnalyzeBehavior
+            AnalyzeBehavior --> PredictInteractions
+        end
+        
+        subgraph "⚡ PHASE 4: TEST ENHANCEMENT" 
+            AnalyzeBaseline["📊 Analyze MCP Baseline<br>Generated test structure<br>and basic assertions"]
+            EnhanceAssertions["🎯 Enhance Assertions<br>- Add intelligent assertions<br>- State change verification<br>- Expected outcome validation"]
+            ApplyPatterns["📋 Apply Established Patterns<br>- Naming conventions<br>- Import statements<br>- Setup/cleanup commands"]
+            IntegrateLocators["🔗 Integrate Locators<br>- Use centralized LOCATORS<br>- Replace generic selectors<br>- Add missing data-testids"]
+            
+            AnalyzeBaseline --> EnhanceAssertions
+            EnhanceAssertions --> ApplyPatterns
+            ApplyPatterns --> IntegrateLocators
+        end
+        
+        subgraph "✅ PHASE 5: QUALITY VALIDATION"
+            ValidatePatterns["📏 Validate Patterns<br>- Naming conventions<br>- Import structure<br>- Command usage"]
+            CheckCoverage["📊 Check Coverage<br>Estimate contribution<br>to 80% minimum"]
+            ValidateQuality["🔍 Validate Quality<br>- Test completeness<br>- Assertion adequacy<br>- Error handling"]
+            FinalReview["🎯 Final Review<br>Production readiness<br>assessment"]
+            
+            ValidatePatterns --> CheckCoverage
+            CheckCoverage --> ValidateQuality
+            ValidateQuality --> FinalReview
+        end
+        
+        subgraph "🎯 OUTPUT DELIVERY"
+            GenerateTest["📝 Generate Enhanced Test<br>Complete Cypress test file"]
+            GenerateDoc["📋 Generate Documentation<br>- Enhancement summary<br>- Pattern compliance<br>- Usage instructions"]
+            DeliverOutput["🚀 Deliver Output<br>Enhanced test ready<br>for production use"]
+            
+            GenerateTest --> GenerateDoc
+            GenerateDoc --> DeliverOutput
+        end
+    end
+    
+    subgraph "🔄 SEQUENTIAL FLOW"
+        ContextReady --> CheckMCP
+        RetrieveSession --> IdentifyComponent
+        PredictInteractions --> AnalyzeBaseline
+        IntegrateLocators --> ValidatePatterns
+        FinalReview --> GenerateTest
+    end
+    
+    subgraph "⚠️ ERROR HANDLING"
+        ErrorMemBank["❌ Memory Bank Missing<br>Abort mode"]
+        ErrorMCP["❌ MCP Unavailable<br>Manual fallback guidance"]
+        ErrorComponent["❌ Component Analysis Failed<br>Use existing patterns"]
+        ErrorEnhancement["❌ Enhancement Failed<br>Deliver baseline with warnings"]
+        
+        LoadContext -.->|"Failure"| ErrorMemBank
+        CheckMCP -.->|"Failure"| ErrorMCP
+        ParseComponent -.->|"Failure"| ErrorComponent
+        EnhanceAssertions -.->|"Failure"| ErrorEnhancement
+    end
+    
+    subgraph "📊 PROGRESS TRACKING"
+        Progress1["Phase 1: 20% Complete"]
+        Progress2["Phase 2: 40% Complete"] 
+        Progress3["Phase 3: 60% Complete"]
+        Progress4["Phase 4: 80% Complete"]
+        Progress5["Phase 5: 100% Complete"]
+        
+        ContextReady -.-> Progress1
+        RetrieveSession -.-> Progress2
+        PredictInteractions -.-> Progress3
+        IntegrateLocators -.-> Progress4
+        DeliverOutput -.-> Progress5
+    end
+
+    %% Styling
+    style LoadContext fill:#e1f5fe
+    style CheckMCP fill:#fff3e0
+    style IdentifyComponent fill:#fce4ec
+    style AnalyzeBaseline fill:#f3e5f5
+    style ValidatePatterns fill:#e8f5e8
+    style GenerateTest fill:#e0f2f1
+    
+    style ErrorMemBank fill:#ffebee,stroke:#f44336
+    style ErrorMCP fill:#ffebee,stroke:#f44336
+    style ErrorComponent fill:#ffebee,stroke:#f44336
+    style ErrorEnhancement fill:#ffebee,stroke:#f44336
+```
+
+## PHASE TRANSITION REQUIREMENTS
+
+### Phase 1 → Phase 2: Memory Bank Context Loading Complete
+**Requirements:**
+- ✅ All memory bank files loaded successfully
+- ✅ Cypress testing patterns available
+- ✅ Tech context and system patterns loaded
+- ✅ Centralized locators accessible
+
+**Validation:**
+```javascript
+const contextValidation = {
+  cypressPatterns: cypressTestingPatterns !== null,
+  techContext: techContext !== null,
+  systemPatterns: systemPatterns !== null,
+  locators: locatorsSystem !== null
+};
+```
+
+### Phase 2 → Phase 3: MCP Session Complete
+**Requirements:**
+- ✅ MCP recording session successfully started and stopped
+- ✅ Session data retrieved from browser-event-recorder
+- ✅ Baseline test generated with basic structure
+- ✅ User interactions captured adequately
+
+**Validation:**
+```javascript
+const sessionValidation = {
+  sessionId: sessionId !== null,
+  sessionData: sessionData !== null,
+  baselineTest: baselineTest !== null && baselineTest.length > 0,
+  userActions: sessionData.events && sessionData.events.length > 0
+};
+```
+
+### Phase 3 → Phase 4: Component Analysis Complete
+**Requirements:**
+- ✅ Target Vue component identified and parsed
+- ✅ Component structure analyzed (methods, computed, data, props)
+- ✅ Testable interactions predicted
+- ✅ Expected behaviors and state changes identified
+
+**Validation:**
+```javascript
+const componentValidation = {
+  componentFile: componentFile !== null,
+  methods: componentAnalysis.methods.length > 0,
+  testableInteractions: componentAnalysis.testableInteractions.length > 0,
+  stateChanges: componentAnalysis.stateChanges.length >= 0
+};
+```
+
+### Phase 4 → Phase 5: Test Enhancement Complete  
+**Requirements:**
+- ✅ MCP baseline test enhanced with intelligent assertions
+- ✅ Established patterns applied (naming, imports, commands)
+- ✅ Centralized locators integrated
+- ✅ Component-specific intelligence incorporated
+
+**Validation:**
+```javascript
+const enhancementValidation = {
+  enhancedTest: enhancedTest !== null,
+  intelligentAssertions: enhancedTest.assertions.length > baselineTest.assertions.length,
+  patternCompliance: validatePatterns(enhancedTest),
+  locatorIntegration: validateLocators(enhancedTest)
+};
+```
+
+### Phase 5 → Output: Quality Validation Complete
+**Requirements:**
+- ✅ All pattern compliance checks passed
+- ✅ Quality standards validated (coverage contribution, test completeness)
+- ✅ Data-testid usage optimized
+- ✅ Final production readiness confirmed
+
+**Validation:**
+```javascript
+const qualityValidation = {
+  patternCompliance: validation.patternCompliance === true,
+  qualityStandards: validation.qualityStandards === true,
+  coverageContribution: validation.coverageContribution >= 0.8,
+  productionReady: true
+};
+```
+
+## DECISION POINTS
+
+### MCP Availability Decision
+```mermaid
+graph TD
+    CheckMCP{"🔍 MCP Available?"}
+    CheckMCP -->|"Yes"| ProceedMCP["✅ Proceed with MCP Recording"]
+    CheckMCP -->|"No"| FallbackManual["⚠️ Fallback to Manual Test Generation<br>Use component analysis only"]
+    
+    ProceedMCP --> StartRecording
+    FallbackManual --> IdentifyComponent
+```
+
+### Component Analysis Success Decision
+```mermaid
+graph TD
+    ParseComponent{"📖 Component Parsed?"}
+    ParseComponent -->|"Success"| AnalyzeBehavior["🧠 Proceed with Behavior Analysis"]
+    ParseComponent -->|"Failure"| UsePatterns["📋 Use Existing Patterns as Fallback<br>Apply generic enhancements"]
+    
+    AnalyzeBehavior --> PredictInteractions
+    UsePatterns --> ApplyPatterns
+```
+
+### Enhancement Quality Decision
+```mermaid  
+graph TD
+    ValidateEnhancement{"✅ Enhancement Quality OK?"}
+    ValidateEnhancement -->|"High Quality"| DeliverEnhanced["🎯 Deliver Enhanced Test"]
+    ValidateEnhancement -->|"Low Quality"| DeliverBaseline["⚠️ Deliver Baseline with Warnings<br>Document enhancement limitations"]
+    
+    DeliverEnhanced --> FinalReview
+    DeliverBaseline --> FinalReview
+```
+
+## PERFORMANCE BENCHMARKS
+
+### Phase Duration Targets
+- **Phase 1 (Context Loading)**: < 10 seconds
+- **Phase 2 (MCP Session)**: Variable (depends on user interaction time)
+- **Phase 3 (Component Analysis)**: < 30 seconds
+- **Phase 4 (Test Enhancement)**: < 45 seconds  
+- **Phase 5 (Quality Validation)**: < 15 seconds
+
+### Quality Metrics
+- **Pattern Compliance**: 100% of established patterns followed
+- **Assertion Enhancement**: Minimum 50% increase in meaningful assertions
+- **Locator Integration**: 90%+ use of centralized locators where applicable
+- **Coverage Contribution**: Estimated 80%+ coverage contribution
+description:
+globs:
+alwaysApply: true
+---

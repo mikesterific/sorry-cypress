@@ -1,0 +1,629 @@
+# MCP Integration Guide for CYPRESS TESTING MODE
+
+This document defines the integration patterns for working with the browser-event-recorder MCP, including session management, event processing, and error handling strategies.
+
+## MCP INTEGRATION ARCHITECTURE
+
+```mermaid
+graph TD
+    subgraph "🎬 MCP SESSION MANAGEMENT PIPELINE"
+        
+        subgraph "🔍 MCP AVAILABILITY"
+            CheckMCP["🔍 Check MCP Status<br>browser-event-recorder<br>connectivity"]
+            ValidateTools["✅ Validate Tools<br>recording/start<br>sessions/get<br>test/generate"]
+            CheckConfig["⚙️ Check Configuration<br>dataTestIdPriority: 1.5<br>Chrome port: 9222"]
+        end
+        
+        subgraph "▶️ SESSION INITIALIZATION"
+            CreateSession["📋 Create Session<br>Configure recording parameters<br>Set framework: cypress<br>Set output: typescript"]
+            StartRecording["🎬 Start Recording<br>mcpTool('recording/start')<br>Return session ID"]
+            GuideUser["👤 Guide User<br>Instruction for interactions<br>Focus on key workflows"]
+        end
+        
+        subgraph "📊 SESSION MONITORING"
+            MonitorStatus["📈 Monitor Status<br>server/status checks<br>server/metrics tracking"]
+            HandleEvents["⚡ Handle Events<br>Real-time event capture<br>Performance monitoring"]
+            ManageBuffer["📦 Manage Buffer<br>Event batching (50/batch)<br>Debouncing (100ms)"]
+        end
+        
+        subgraph "⏹️ SESSION COMPLETION"
+            StopRecording["⏹️ Stop Recording<br>mcpTool('recording/stop')<br>Session finalization"]
+            RetrieveData["📥 Retrieve Data<br>mcpTool('sessions/get')<br>Event data extraction"]
+            GenerateBaseline["🔧 Generate Baseline<br>mcpTool('test/generate')<br>TypeScript Cypress code"]
+        end
+        
+        subgraph "⚠️ ERROR HANDLING"
+            HandleMCPErrors["❌ Handle MCP Errors<br>Connection failures<br>Session timeouts<br>Generation errors"]
+            FallbackStrategies["🔄 Fallback Strategies<br>Manual test generation<br>Component-only analysis"]
+            RecoveryActions["🔧 Recovery Actions<br>Session restart<br>Alternative approaches"]
+        end
+    end
+    
+    CheckMCP --> ValidateTools
+    ValidateTools --> CheckConfig
+    CheckConfig --> CreateSession
+    
+    CreateSession --> StartRecording
+    StartRecording --> GuideUser
+    GuideUser --> MonitorStatus
+    
+    MonitorStatus --> HandleEvents
+    HandleEvents --> ManageBuffer
+    ManageBuffer --> StopRecording
+    
+    StopRecording --> RetrieveData
+    RetrieveData --> GenerateBaseline
+    
+    CheckMCP -.->|"Failure"| HandleMCPErrors
+    StartRecording -.->|"Failure"| FallbackStrategies
+    RetrieveData -.->|"Failure"| RecoveryActions
+
+    %% Styling
+    style CheckMCP fill:#e3f2fd
+    style CreateSession fill:#fff3e0
+    style MonitorStatus fill:#fce4ec
+    style StopRecording fill:#e8f5e8
+    style HandleMCPErrors fill:#ffebee,stroke:#f44336
+```
+
+## MCP SESSION LIFECYCLE MANAGEMENT
+
+### Session Configuration Template
+```javascript
+// MCP Session Configuration
+const sessionConfig = {
+  // Core recording parameters
+  dataTestIdPriority: 1.5,        // Prioritize data-testid selectors
+  framework: 'cypress',            // Generate Cypress-specific code
+  outputFormat: 'typescript',      // TypeScript output format
+  includeAssertions: true,         // Include basic assertions
+  includeComments: true,           // Add explanatory comments
+  
+  // Event capture configuration
+  coreEvents: ['mousedown', 'mouseup', 'click', 'input', 'change', 'keydown'],
+  contextualEvents: ['mouseover', 'mouseout', 'focus', 'blur', 'scroll'],
+  maxEventsPerSecond: 100,         // Rate limiting
+  batchSize: 50,                   // Event batching
+  debounceMs: 100,                 // Event debouncing
+  
+  // Chrome integration
+  debuggingPort: 9222,             // Chrome DevTools Protocol port
+  maxRetries: 3,                   // Connection retry attempts
+  retryDelay: 1000,                // Retry delay in ms
+  
+  // Quality settings
+  stabilityThreshold: 0.95,        // Selector stability threshold
+  maxCandidates: 6                 // Maximum selector candidates
+};
+```
+
+### Session Creation and Management
+```javascript
+async function createMCPSession(config) {
+  try {
+    // Verify MCP availability first
+    const mcpStatus = await mcpTool('server/status');
+    if (!mcpStatus || mcpStatus.status !== 'running') {
+      throw new Error('MCP server not available');
+    }
+    
+    // Create new recording session
+    const sessionResponse = await mcpTool('recording/start', config);
+    
+    if (!sessionResponse || !sessionResponse.sessionId) {
+      throw new Error('Failed to create recording session');
+    }
+    
+    return {
+      sessionId: sessionResponse.sessionId,
+      status: 'recording',
+      startTime: Date.now(),
+      config: config,
+      events: [],
+      metrics: {
+        eventsRecorded: 0,
+        startTime: Date.now(),
+        lastActivity: Date.now()
+      }
+    };
+    
+  } catch (error) {
+    console.error('Failed to create MCP session:', error);
+    
+    // Return error state with fallback options
+    return {
+      sessionId: null,
+      status: 'failed',
+      error: error.message,
+      fallbackOptions: [
+        'manual_test_generation',
+        'component_analysis_only',
+        'existing_pattern_reuse'
+      ]
+    };
+  }
+}
+```
+
+### Session Monitoring and Status Tracking
+```javascript
+class MCPSessionMonitor {
+  constructor(sessionId) {
+    this.sessionId = sessionId;
+    this.monitoringInterval = null;
+    this.metrics = {
+      eventsRecorded: 0,
+      lastActivity: Date.now(),
+      errors: [],
+      performance: []
+    };
+  }
+  
+  async startMonitoring() {
+    this.monitoringInterval = setInterval(async () => {
+      try {
+        // Get session status
+        const status = await mcpTool('server/status');
+        
+        // Get session metrics
+        const metrics = await mcpTool('server/metrics');
+        
+        // Update monitoring data
+        this.updateMetrics(status, metrics);
+        
+        // Check for issues
+        this.checkForIssues(status, metrics);
+        
+      } catch (error) {
+        this.handleMonitoringError(error);
+      }
+    }, 5000); // Monitor every 5 seconds
+  }
+  
+  updateMetrics(status, metrics) {
+    this.metrics = {
+      ...this.metrics,
+      eventsRecorded: metrics.eventsRecorded || 0,
+      lastActivity: Date.now(),
+      serverStatus: status.status,
+      memoryUsage: metrics.memoryUsage,
+      cpuUsage: metrics.cpuUsage
+    };
+  }
+  
+  checkForIssues(status, metrics) {
+    // Check for performance issues
+    if (metrics.cpuUsage > 80) {
+      this.reportIssue('high_cpu', 'High CPU usage detected during recording');
+    }
+    
+    if (metrics.memoryUsage > 500 * 1024 * 1024) { // 500MB
+      this.reportIssue('high_memory', 'High memory usage detected during recording');
+    }
+    
+    // Check for stalled recording
+    const timeSinceLastActivity = Date.now() - this.metrics.lastActivity;
+    if (timeSinceLastActivity > 30000) { // 30 seconds
+      this.reportIssue('stalled_recording', 'Recording appears to be stalled');
+    }
+  }
+  
+  stopMonitoring() {
+    if (this.monitoringInterval) {
+      clearInterval(this.monitoringInterval);
+      this.monitoringInterval = null;
+    }
+  }
+}
+```
+
+## USER GUIDANCE PATTERNS
+
+### Interactive Recording Guidance
+```javascript
+function provideMCPRecordingGuidance(componentAnalysis, sessionId) {
+  const guidance = {
+    introduction: generateIntroductionMessage(componentAnalysis),
+    keyInteractions: identifyKeyInteractions(componentAnalysis),
+    recordingTips: generateRecordingTips(componentAnalysis),
+    completionCriteria: defineCompletionCriteria(componentAnalysis)
+  };
+  
+  return `
+# 🎬 Recording Session Started
+
+**Session ID**: ${sessionId}
+**Component**: ${componentAnalysis.componentName}
+
+## ${guidance.introduction}
+
+## 🎯 Key Interactions to Record:
+${guidance.keyInteractions.map(interaction => `
+- **${interaction.type}**: ${interaction.description}
+  - Element: ${interaction.selector}
+  - Expected Result: ${interaction.expectedOutcome}
+`).join('')}
+
+## 💡 Recording Tips:
+${guidance.recordingTips.map(tip => `- ${tip}`).join('\n')}
+
+## ✅ Completion Criteria:
+${guidance.completionCriteria.map(criteria => `- ${criteria}`).join('\n')}
+
+**Ready to record? Perform the interactions in your browser now...**
+  `;
+}
+
+function identifyKeyInteractions(componentAnalysis) {
+  const keyInteractions = [];
+  
+  // Identify primary user actions based on component analysis
+  if (componentAnalysis.methods.eventHandlers.length > 0) {
+    for (const handler of componentAnalysis.methods.eventHandlers) {
+      keyInteractions.push({
+        type: handler.type,
+        description: generateInteractionDescription(handler),
+        selector: generateSelectorHint(handler),
+        expectedOutcome: predictExpectedOutcome(handler)
+      });
+    }
+  }
+  
+  // Add form-specific interactions
+  if (componentAnalysis.hasFormElements) {
+    keyInteractions.push({
+      type: 'form_submission',
+      description: 'Fill out and submit the form',
+      selector: 'form elements and submit button',
+      expectedOutcome: 'Form validation and submission'
+    });
+  }
+  
+  return keyInteractions;
+}
+```
+
+### Recording Quality Assessment
+```javascript
+function assessRecordingQuality(sessionData) {
+  const assessment = {
+    score: 0,
+    maxScore: 100,
+    issues: [],
+    suggestions: []
+  };
+  
+  // Assess event coverage
+  const eventCoverage = assessEventCoverage(sessionData);
+  assessment.score += eventCoverage.score;
+  
+  if (eventCoverage.score < 30) {
+    assessment.issues.push({
+      type: 'low_event_coverage',
+      message: 'Recording captured fewer interactions than expected',
+      suggestion: 'Consider recording additional user interactions'
+    });
+  }
+  
+  // Assess selector quality
+  const selectorQuality = assessSelectorQuality(sessionData);
+  assessment.score += selectorQuality.score;
+  
+  if (selectorQuality.dataTestIdUsage < 0.5) {
+    assessment.suggestions.push({
+      type: 'improve_selectors',
+      message: 'Consider adding data-testid attributes for more reliable selectors'
+    });
+  }
+  
+  // Assess interaction completeness
+  const completeness = assessInteractionCompleteness(sessionData);
+  assessment.score += completeness.score;
+  
+  return assessment;
+}
+```
+
+## DATA RETRIEVAL AND PROCESSING
+
+### Session Data Extraction
+```javascript
+async function retrieveSessionData(sessionId) {
+  try {
+    // Get raw session data
+    const sessionData = await mcpTool('sessions/get', { sessionId });
+    
+    if (!sessionData || !sessionData.events) {
+      throw new Error(`No session data found for session ${sessionId}`);
+    }
+    
+    // Process and validate the data
+    const processedData = processSessionData(sessionData);
+    
+    // Generate baseline test from session data
+    const baselineTest = await mcpTool('test/generate', { sessionId });
+    
+    if (!baselineTest || !baselineTest.code) {
+      throw new Error(`Failed to generate baseline test for session ${sessionId}`);
+    }
+    
+    return {
+      sessionId: sessionId,
+      events: processedData.events,
+      selectors: processedData.selectors,
+      interactions: processedData.interactions,
+      baselineTest: baselineTest.code,
+      metadata: {
+        recordingDuration: processedData.duration,
+        eventCount: processedData.events.length,
+        selectorCount: processedData.selectors.length,
+        dataTestIdUsage: processedData.dataTestIdUsage
+      }
+    };
+    
+  } catch (error) {
+    console.error('Failed to retrieve session data:', error);
+    
+    // Return error state with recovery options
+    return {
+      sessionId: sessionId,
+      error: error.message,
+      recoveryOptions: [
+        'retry_data_retrieval',
+        'manual_test_generation',
+        'partial_data_processing'
+      ]
+    };
+  }
+}
+
+function processSessionData(rawData) {
+  return {
+    events: processEvents(rawData.events),
+    selectors: extractSelectors(rawData.events),
+    interactions: groupInteractions(rawData.events),
+    duration: calculateDuration(rawData.startTime, rawData.endTime),
+    dataTestIdUsage: calculateDataTestIdUsage(rawData.events)
+  };
+}
+```
+
+### Baseline Test Processing
+```javascript
+function processBaselineTest(baselineCode, sessionMetadata) {
+  const processed = {
+    originalCode: baselineCode,
+    structure: analyzeTestStructure(baselineCode),
+    actions: extractTestActions(baselineCode),
+    selectors: extractTestSelectors(baselineCode),
+    assertions: extractTestAssertions(baselineCode),
+    enhancementOpportunities: identifyEnhancementOpportunities(baselineCode)
+  };
+  
+  // Add metadata context
+  processed.context = {
+    recordingDuration: sessionMetadata.recordingDuration,
+    eventCount: sessionMetadata.eventCount,
+    selectorTypes: categorizeSelectors(processed.selectors),
+    actionTypes: categorizeActions(processed.actions)
+  };
+  
+  return processed;
+}
+```
+
+## ERROR HANDLING AND RECOVERY
+
+### MCP Connection Error Handling
+```javascript
+async function handleMCPError(error, context) {
+  const errorHandling = {
+    type: categorizeError(error),
+    severity: assessErrorSeverity(error),
+    recoveryStrategy: determineRecoveryStrategy(error, context),
+    fallbackOptions: generateFallbackOptions(context)
+  };
+  
+  console.error(`MCP Error [${errorHandling.type}]:`, error.message);
+  
+  switch (errorHandling.type) {
+    case 'connection_failure':
+      return await handleConnectionFailure(error, context);
+      
+    case 'session_timeout':
+      return await handleSessionTimeout(error, context);
+      
+    case 'generation_failure':
+      return await handleGenerationFailure(error, context);
+      
+    default:
+      return await handleGenericError(error, context);
+  }
+}
+
+async function handleConnectionFailure(error, context) {
+  // Try to reconnect to MCP
+  const reconnected = await attemptMCPReconnection();
+  
+  if (reconnected) {
+    return {
+      recovered: true,
+      action: 'reconnected_to_mcp',
+      message: 'MCP connection restored, continuing with recording'
+    };
+  }
+  
+  // Fallback to manual test generation
+  return {
+    recovered: false,
+    fallback: 'manual_generation',
+    message: 'MCP unavailable, switching to component analysis only',
+    guidance: generateManualFallbackGuidance(context.componentAnalysis)
+  };
+}
+
+async function handleSessionTimeout(error, context) {
+  // Try to retrieve partial session data
+  const partialData = await attemptPartialDataRetrieval(context.sessionId);
+  
+  if (partialData && partialData.events.length > 0) {
+    return {
+      recovered: true,
+      action: 'using_partial_data',
+      message: 'Using partially recorded session data for test generation',
+      data: partialData
+    };
+  }
+  
+  // Restart recording session
+  return {
+    recovered: false,
+    action: 'restart_recording',
+    message: 'Session timed out, please restart recording',
+    guidance: 'The recording session has expired. Please start a new recording.'
+  };
+}
+```
+
+### Fallback Strategy Implementation
+```javascript
+function generateFallbackOptions(context) {
+  const fallbacks = [];
+  
+  // Option 1: Component analysis only
+  if (context.componentAnalysis && context.componentAnalysis.methods.length > 0) {
+    fallbacks.push({
+      type: 'component_analysis_only',
+      description: 'Generate test based on component analysis without MCP recording',
+      viability: 'high',
+      estimatedQuality: 0.7
+    });
+  }
+  
+  // Option 2: Existing pattern reuse
+  if (context.memoryBankContext.similarComponents.length > 0) {
+    fallbacks.push({
+      type: 'pattern_reuse',
+      description: 'Adapt existing test patterns from similar components',
+      viability: 'medium',
+      estimatedQuality: 0.6
+    });
+  }
+  
+  // Option 3: Manual template generation
+  fallbacks.push({
+    type: 'manual_template',
+    description: 'Generate basic test template for manual completion',
+    viability: 'high',
+    estimatedQuality: 0.4
+  });
+  
+  return fallbacks;
+}
+
+function executeF
+Back(fallbackType, context) {
+  switch (fallbackType) {
+    case 'component_analysis_only':
+      return generateComponentBasedTest(context.componentAnalysis);
+      
+    case 'pattern_reuse':
+      return adaptExistingPatterns(context.memoryBankContext.similarComponents);
+      
+    case 'manual_template':
+      return generateManualTemplate(context.componentAnalysis);
+      
+    default:
+      throw new Error(`Unknown fallback type: ${fallbackType}`);
+  }
+}
+```
+
+## PERFORMANCE OPTIMIZATION
+
+### Session Performance Monitoring
+```javascript
+class MCPPerformanceMonitor {
+  constructor(sessionId) {
+    this.sessionId = sessionId;
+    this.performanceData = {
+      eventProcessingTimes: [],
+      memoryUsage: [],
+      responseLatencies: [],
+      errorRates: []
+    };
+  }
+  
+  recordEventProcessingTime(startTime, endTime) {
+    const duration = endTime - startTime;
+    this.performanceData.eventProcessingTimes.push(duration);
+    
+    // Alert if processing is too slow
+    if (duration > 1000) { // 1 second
+      console.warn(`Slow event processing detected: ${duration}ms`);
+    }
+  }
+  
+  recordAPIResponseTime(endpoint, startTime, endTime) {
+    const latency = endTime - startTime;
+    this.performanceData.responseLatencies.push({
+      endpoint,
+      latency,
+      timestamp: Date.now()
+    });
+    
+    // Alert if API is too slow
+    if (latency > 5000) { // 5 seconds
+      console.warn(`Slow MCP API response: ${endpoint} took ${latency}ms`);
+    }
+  }
+  
+  getPerformanceSummary() {
+    return {
+      avgEventProcessing: this.calculateAverage(this.performanceData.eventProcessingTimes),
+      avgAPILatency: this.calculateAverage(this.performanceData.responseLatencies.map(r => r.latency)),
+      maxMemoryUsage: Math.max(...this.performanceData.memoryUsage),
+      errorRate: this.calculateErrorRate()
+    };
+  }
+}
+```
+
+### Optimization Strategies
+```javascript
+const optimizationStrategies = {
+  // Event batching optimization
+  eventBatching: {
+    enabled: true,
+    batchSize: 50,
+    flushInterval: 100, // ms
+    maxBatchAge: 1000   // ms
+  },
+  
+  // Selector optimization
+  selectorOptimization: {
+    prioritizeDataTestId: true,
+    dataTestIdWeight: 1.5,
+    maxSelectorLength: 100,
+    avoidNthChild: true
+  },
+  
+  // Memory management
+  memoryManagement: {
+    maxSessionSize: 10 * 1024 * 1024, // 10MB
+    cleanupInterval: 30 * 1000,        // 30 seconds
+    maxEventHistory: 1000
+  },
+  
+  // Connection optimization
+  connectionOptimization: {
+    keepAliveInterval: 30 * 1000,  // 30 seconds
+    reconnectAttempts: 3,
+    reconnectDelay: 1000          // 1 second
+  }
+};
+```
+description:
+globs:
+alwaysApply: true
+---

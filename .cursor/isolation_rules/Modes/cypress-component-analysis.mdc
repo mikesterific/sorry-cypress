@@ -1,0 +1,612 @@
+# Component Analysis Patterns for CYPRESS TESTING MODE
+
+This document defines the algorithms and patterns for analyzing Vue components to enhance Cypress test generation with intelligent assertions and component-specific knowledge.
+
+## COMPONENT ANALYSIS ARCHITECTURE
+
+```mermaid
+graph TD
+    subgraph "🔍 COMPONENT ANALYSIS PIPELINE"
+        
+        subgraph "📖 FILE PARSING"
+            IdentifyFile["🎯 Identify Target Component<br>- File path resolution<br>- Extension validation (.vue, .ts, .js)<br>- Accessibility check"]
+            ParseStructure["📋 Parse File Structure<br>- Template section<br>- Script section<br>- Style section<br>- Import statements"]
+            ValidateStructure["✅ Validate Structure<br>- Vue Options API<br>- Composition API<br>- TypeScript support"]
+        end
+        
+        subgraph "🧠 BEHAVIOR ANALYSIS"
+            AnalyzeMethods["⚙️ Analyze Methods<br>- Event handlers<br>- API calls<br>- State mutations<br>- Business logic"]
+            AnalyzeComputed["🔄 Analyze Computed<br>- Dependencies<br>- Reactivity patterns<br>- UI state derivation"]
+            AnalyzeData["📊 Analyze Data<br>- Initial state<br>- Reactive properties<br>- State structure"]
+            AnalyzeProps["📥 Analyze Props<br>- Input properties<br>- Validation rules<br>- Default values"]
+        end
+        
+        subgraph "🎯 INTERACTION PREDICTION"
+            PredictUserActions["👤 Predict User Actions<br>- Clickable elements<br>- Form interactions<br>- Keyboard events"]
+            PredictStateChanges["🔄 Predict State Changes<br>- Data mutations<br>- Computed updates<br>- Side effects"]
+            PredictUIUpdates["🖼️ Predict UI Updates<br>- Conditional rendering<br>- List updates<br>- Class changes"]
+            PredictSideEffects["⚡ Predict Side Effects<br>- API calls<br>- Socket events<br>- External integrations"]
+        end
+        
+        subgraph "📋 TEST SCENARIO GENERATION"
+            GenerateScenarios["📝 Generate Test Scenarios<br>- Happy path tests<br>- Error handling<br>- Edge cases"]
+            GenerateAssertions["✅ Generate Assertions<br>- State verification<br>- UI validation<br>- Behavior confirmation"]
+            GenerateSetup["⚙️ Generate Setup<br>- Component mounting<br>- Props configuration<br>- Mock preparation"]
+        end
+    end
+    
+    IdentifyFile --> ParseStructure
+    ParseStructure --> ValidateStructure
+    ValidateStructure --> AnalyzeMethods
+    ValidateStructure --> AnalyzeComputed  
+    ValidateStructure --> AnalyzeData
+    ValidateStructure --> AnalyzeProps
+    
+    AnalyzeMethods --> PredictUserActions
+    AnalyzeComputed --> PredictStateChanges
+    AnalyzeData --> PredictUIUpdates
+    AnalyzeMethods --> PredictSideEffects
+    
+    PredictUserActions --> GenerateScenarios
+    PredictStateChanges --> GenerateAssertions
+    PredictUIUpdates --> GenerateSetup
+
+    %% Styling
+    style IdentifyFile fill:#e3f2fd
+    style AnalyzeMethods fill:#fff3e0  
+    style PredictUserActions fill:#fce4ec
+    style GenerateScenarios fill:#e8f5e8
+```
+
+## VUE COMPONENT PARSING ALGORITHMS
+
+### Method Analysis Algorithm
+```javascript
+function analyzeVueMethods(componentFile) {
+  const methods = extractMethodsSection(componentFile);
+  
+  return {
+    eventHandlers: extractEventHandlers(methods),     // @click, @input, @submit handlers
+    apiMethods: extractApiMethods(methods),           // HTTP calls, fetch, axios
+    stateMutations: extractStateMutations(methods),   // this.property = value
+    socketMethods: extractSocketMethods(methods),     // Socket.IO interactions
+    navigationMethods: extractNavigationMethods(methods), // Router navigation
+    formMethods: extractFormMethods(methods),         // Form validation, submission
+    asyncMethods: extractAsyncMethods(methods),       // Async operations
+    lifecycleMethods: extractLifecycleMethods(methods) // created, mounted, etc.
+  };
+}
+
+// Event Handler Pattern Recognition
+function extractEventHandlers(methods) {
+  const eventHandlers = [];
+  
+  for (const [methodName, methodBody] of Object.entries(methods)) {
+    // Look for common event handler patterns
+    if (methodName.includes('click') || methodName.includes('Click')) {
+      eventHandlers.push({
+        type: 'click',
+        method: methodName,
+        expectedBehavior: analyzeClickBehavior(methodBody)
+      });
+    }
+    
+    if (methodName.includes('submit') || methodName.includes('Submit')) {
+      eventHandlers.push({
+        type: 'submit', 
+        method: methodName,
+        expectedBehavior: analyzeSubmitBehavior(methodBody)
+      });
+    }
+    
+    if (methodName.includes('input') || methodName.includes('Input') || 
+        methodName.includes('change') || methodName.includes('Change')) {
+      eventHandlers.push({
+        type: 'input',
+        method: methodName,
+        expectedBehavior: analyzeInputBehavior(methodBody)
+      });
+    }
+  }
+  
+  return eventHandlers;
+}
+```
+
+### Computed Properties Analysis
+```javascript
+function analyzeVueComputed(componentFile) {
+  const computed = extractComputedSection(componentFile);
+  
+  return {
+    dependencies: analyzeDependencies(computed),       // What data properties are used
+    uiState: analyzeUIStateComputed(computed),        // UI-related computed properties
+    validations: analyzeValidationComputed(computed), // Form validation computed
+    filters: analyzeFilterComputed(computed),         // Data filtering computed
+    calculations: analyzeCalculationComputed(computed) // Mathematical computations
+  };
+}
+
+// Dependency Analysis for Reactive Testing
+function analyzeDependencies(computed) {
+  const dependencies = {};
+  
+  for (const [computedName, computedFunction] of Object.entries(computed)) {
+    // Parse function body to find 'this.property' references
+    const functionBody = computedFunction.toString();
+    const dependencies = extractDataReferences(functionBody);
+    
+    dependencies[computedName] = {
+      dataProperties: dependencies,
+      testingStrategy: generateReactivityTests(dependencies)
+    };
+  }
+  
+  return dependencies;
+}
+```
+
+### Data Structure Analysis  
+```javascript
+function analyzeVueData(componentFile) {
+  const data = extractDataSection(componentFile);
+  
+  return {
+    initialState: analyzeInitialState(data),         // Starting values
+    stateStructure: analyzeStateStructure(data),     // Object/array structures
+    formData: analyzeFormData(data),                 // Form-related data
+    uiState: analyzeUIState(data),                   // UI control state
+    apiData: analyzeApiData(data),                   // Data from API calls
+    mutationPatterns: analyzeMutationPatterns(data)  // How data changes
+  };
+}
+
+// State Mutation Pattern Analysis
+function analyzeMutationPatterns(data) {
+  const patterns = [];
+  
+  // Look for common Vue patterns
+  for (const [propertyName, initialValue] of Object.entries(data)) {
+    if (typeof initialValue === 'boolean') {
+      patterns.push({
+        property: propertyName,
+        type: 'boolean_toggle',
+        testStrategy: 'assert_true_false_states'
+      });
+    }
+    
+    if (Array.isArray(initialValue)) {
+      patterns.push({
+        property: propertyName,
+        type: 'array_manipulation',
+        testStrategy: 'assert_length_content_changes'
+      });
+    }
+    
+    if (typeof initialValue === 'object' && initialValue !== null) {
+      patterns.push({
+        property: propertyName,
+        type: 'object_property_updates',
+        testStrategy: 'assert_nested_property_changes'
+      });
+    }
+  }
+  
+  return patterns;
+}
+```
+
+### Props Analysis Algorithm
+```javascript
+function analyzeVueProps(componentFile) {
+  const props = extractPropsSection(componentFile);
+  
+  return {
+    requiredProps: analyzeRequiredProps(props),       // Required for component function
+    optionalProps: analyzeOptionalProps(props),       // Optional with defaults
+    propTypes: analyzePropTypes(props),               // Type validation
+    propValidation: analyzePropValidation(props),     // Custom validation
+    testingProps: generatePropTestCases(props)        // Test case generation
+  };
+}
+
+// Prop-based Test Case Generation
+function generatePropTestCases(props) {
+  const testCases = [];
+  
+  for (const [propName, propConfig] of Object.entries(props)) {
+    // Generate test cases for different prop scenarios
+    if (propConfig.required) {
+      testCases.push({
+        scenario: 'missing_required_prop',
+        prop: propName,
+        testType: 'error_handling',
+        assertion: 'should_handle_missing_prop_gracefully'
+      });
+    }
+    
+    if (propConfig.type === Boolean) {
+      testCases.push({
+        scenario: 'boolean_prop_variations',
+        prop: propName,
+        testType: 'state_testing',
+        variations: [true, false],
+        assertion: 'should_render_differently_for_boolean_values'
+      });
+    }
+    
+    if (propConfig.type === Array) {
+      testCases.push({
+        scenario: 'array_prop_variations',
+        prop: propName,
+        testType: 'list_rendering',
+        variations: [[], ['item1'], ['item1', 'item2']],
+        assertion: 'should_render_list_items_correctly'
+      });
+    }
+  }
+  
+  return testCases;
+}
+```
+
+## INTERACTION PREDICTION ALGORITHMS
+
+### User Action Prediction
+```javascript
+function predictUserActions(componentAnalysis) {
+  const userActions = [];
+  
+  // Analyze template for interactive elements
+  const template = componentAnalysis.template;
+  
+  // Find clickable elements
+  const clickables = findClickableElements(template);
+  for (const element of clickables) {
+    userActions.push({
+      action: 'click',
+      element: element.selector,
+      expectedMethod: findLinkedMethod(element, componentAnalysis.methods),
+      expectedStateChange: predictClickOutcome(element, componentAnalysis)
+    });
+  }
+  
+  // Find form elements
+  const formElements = findFormElements(template);
+  for (const element of formElements) {
+    userActions.push({
+      action: 'input',
+      element: element.selector,
+      inputType: element.type,
+      expectedValidation: findValidationRules(element, componentAnalysis),
+      expectedStateChange: predictInputOutcome(element, componentAnalysis)
+    });
+  }
+  
+  return userActions;
+}
+
+// Click Outcome Prediction
+function predictClickOutcome(element, componentAnalysis) {
+  const linkedMethod = findLinkedMethod(element, componentAnalysis.methods);
+  
+  if (linkedMethod) {
+    return analyzeMethodOutcome(linkedMethod, componentAnalysis);
+  }
+  
+  return { type: 'unknown', confidence: 0.1 };
+}
+
+function analyzeMethodOutcome(method, componentAnalysis) {
+  const methodBody = method.body;
+  
+  // Look for common patterns in method body
+  if (methodBody.includes('this.$router.push')) {
+    return {
+      type: 'navigation',
+      confidence: 0.9,
+      assertion: 'should_navigate_to_route'
+    };
+  }
+  
+  if (methodBody.includes('this.') && methodBody.includes('=')) {
+    return {
+      type: 'state_mutation',
+      confidence: 0.8,
+      properties: extractStateAssignments(methodBody),
+      assertion: 'should_update_component_state'
+    };
+  }
+  
+  if (methodBody.includes('axios.') || methodBody.includes('fetch(')) {
+    return {
+      type: 'api_call',
+      confidence: 0.9,
+      assertion: 'should_make_api_request'
+    };
+  }
+  
+  if (methodBody.includes('this.$emit')) {
+    return {
+      type: 'event_emission',
+      confidence: 0.8,
+      events: extractEmittedEvents(methodBody),
+      assertion: 'should_emit_events'
+    };
+  }
+  
+  return { type: 'complex', confidence: 0.5 };
+}
+```
+
+### State Change Prediction
+```javascript
+function predictStateChanges(componentAnalysis) {
+  const stateChanges = [];
+  
+  // Analyze methods for state mutations
+  for (const method of componentAnalysis.methods.stateMutations) {
+    const mutations = extractStateMutations(method.body);
+    
+    for (const mutation of mutations) {
+      stateChanges.push({
+        trigger: method.name,
+        property: mutation.property,
+        changeType: mutation.type,
+        expectedValue: mutation.expectedValue,
+        testAssertion: generateStateAssertion(mutation)
+      });
+    }
+  }
+  
+  // Analyze computed property reactivity
+  for (const computed of componentAnalysis.computed.dependencies) {
+    stateChanges.push({
+      trigger: 'dependency_change',
+      property: computed.name,
+      dependencies: computed.dataProperties,
+      changeType: 'computed_update',
+      testAssertion: generateComputedAssertion(computed)
+    });
+  }
+  
+  return stateChanges;
+}
+
+function generateStateAssertion(mutation) {
+  switch (mutation.type) {
+    case 'boolean_toggle':
+      return {
+        type: 'boolean_assertion',
+        code: `cy.get('[data-testid="${mutation.property}"]').should('${mutation.expectedValue ? 'be.visible' : 'not.exist'}')`
+      };
+      
+    case 'array_push':
+      return {
+        type: 'array_length_assertion', 
+        code: `cy.get('[data-testid="${mutation.property}-list"]').should('have.length', ${mutation.expectedLength})`
+      };
+      
+    case 'string_update':
+      return {
+        type: 'content_assertion',
+        code: `cy.get('[data-testid="${mutation.property}"]').should('contain', '${mutation.expectedValue}')`
+      };
+      
+    default:
+      return {
+        type: 'generic_assertion',
+        code: `// Verify ${mutation.property} state change`
+      };
+  }
+}
+```
+
+### UI Update Prediction
+```javascript
+function predictUIUpdates(componentAnalysis) {
+  const uiUpdates = [];
+  
+  // Analyze template for conditional rendering
+  const conditionals = findConditionalRendering(componentAnalysis.template);
+  for (const conditional of conditionals) {
+    uiUpdates.push({
+      type: 'conditional_rendering',
+      condition: conditional.condition,
+      element: conditional.element,
+      testStrategy: 'assert_visibility_based_on_condition'
+    });
+  }
+  
+  // Analyze template for list rendering
+  const lists = findListRendering(componentAnalysis.template);
+  for (const list of lists) {
+    uiUpdates.push({
+      type: 'list_rendering',
+      dataSource: list.dataSource,
+      itemTemplate: list.itemTemplate,
+      testStrategy: 'assert_list_item_count_and_content'
+    });
+  }
+  
+  // Analyze template for dynamic classes
+  const dynamicClasses = findDynamicClasses(componentAnalysis.template);
+  for (const dynamicClass of dynamicClasses) {
+    uiUpdates.push({
+      type: 'dynamic_classes',
+      condition: dynamicClass.condition,
+      className: dynamicClass.className,
+      element: dynamicClass.element,
+      testStrategy: 'assert_class_presence_based_on_state'
+    });
+  }
+  
+  return uiUpdates;
+}
+```
+
+## TEST SCENARIO GENERATION
+
+### Scenario Templates
+```javascript
+const scenarioTemplates = {
+  // Happy Path Scenarios
+  happy_path_form_submission: {
+    setup: 'mount component with valid props',
+    actions: ['fill form fields', 'click submit'],
+    assertions: ['form submits successfully', 'success message appears', 'form resets']
+  },
+  
+  happy_path_list_interaction: {
+    setup: 'mount component with list data',
+    actions: ['click list item', 'verify item selection'],
+    assertions: ['item highlighted', 'details displayed', 'event emitted']
+  },
+  
+  // Error Handling Scenarios
+  error_handling_api_failure: {
+    setup: 'mock API to return error',
+    actions: ['trigger API call', 'wait for response'],
+    assertions: ['error message displayed', 'loading state cleared', 'retry option available']
+  },
+  
+  error_handling_validation: {
+    setup: 'mount component with validation',
+    actions: ['submit invalid form', 'verify validation'],
+    assertions: ['validation errors shown', 'form not submitted', 'focus on first error field']
+  },
+  
+  // Edge Case Scenarios
+  edge_case_empty_state: {
+    setup: 'mount component with empty data',
+    actions: ['verify empty state rendering'],
+    assertions: ['empty state message shown', 'no errors thrown', 'actions available']
+  },
+  
+  edge_case_loading_state: {
+    setup: 'mount component with loading data',
+    actions: ['verify loading state rendering'],
+    assertions: ['loading indicator shown', 'content not visible', 'no errors thrown']
+  }
+};
+```
+
+### Assertion Generation
+```javascript
+function generateIntelligentAssertions(componentAnalysis, userActions) {
+  const assertions = [];
+  
+  for (const action of userActions) {
+    // Generate state-based assertions
+    if (action.expectedStateChange.type === 'state_mutation') {
+      assertions.push({
+        trigger: action.action,
+        type: 'state_assertion',
+        code: generateStateAssertionCode(action.expectedStateChange)
+      });
+    }
+    
+    // Generate UI-based assertions
+    if (action.expectedStateChange.type === 'ui_update') {
+      assertions.push({
+        trigger: action.action,
+        type: 'ui_assertion', 
+        code: generateUIAssertionCode(action.expectedStateChange)
+      });
+    }
+    
+    // Generate API-based assertions
+    if (action.expectedStateChange.type === 'api_call') {
+      assertions.push({
+        trigger: action.action,
+        type: 'api_assertion',
+        code: generateAPIAssertionCode(action.expectedStateChange)
+      });
+    }
+  }
+  
+  return assertions;
+}
+
+function generateStateAssertionCode(stateChange) {
+  return `
+    // Verify state change: ${stateChange.property}
+    cy.window().its('app.$data.${stateChange.property}').should('eq', ${stateChange.expectedValue});
+  `;
+}
+
+function generateUIAssertionCode(uiChange) {
+  return `
+    // Verify UI update: ${uiChange.element}
+    cy.get('[data-testid="${uiChange.element}"]').should('${uiChange.assertion}');
+  `;
+}
+
+function generateAPIAssertionCode(apiCall) {
+  return `
+    // Verify API call: ${apiCall.endpoint}
+    cy.intercept('${apiCall.method}', '${apiCall.endpoint}').as('${apiCall.alias}');
+    cy.wait('@${apiCall.alias}').should('have.property', 'response.statusCode', 200);
+  `;
+}
+```
+
+## COMPONENT ANALYSIS QUALITY METRICS
+
+### Analysis Confidence Scoring
+```javascript
+function calculateAnalysisConfidence(componentAnalysis) {
+  let confidence = 0;
+  let maxConfidence = 0;
+  
+  // Method analysis confidence
+  if (componentAnalysis.methods.eventHandlers.length > 0) {
+    confidence += componentAnalysis.methods.eventHandlers.length * 10;
+  }
+  maxConfidence += 50;
+  
+  // Data analysis confidence
+  if (componentAnalysis.data.stateStructure.length > 0) {
+    confidence += componentAnalysis.data.stateStructure.length * 5;
+  }
+  maxConfidence += 25;
+  
+  // Computed analysis confidence
+  if (componentAnalysis.computed.dependencies.length > 0) {
+    confidence += componentAnalysis.computed.dependencies.length * 5;
+  }
+  maxConfidence += 25;
+  
+  return Math.min(confidence / maxConfidence, 1.0);
+}
+```
+
+### Analysis Validation
+```javascript
+function validateComponentAnalysis(analysis) {
+  const validation = {
+    isValid: true,
+    warnings: [],
+    suggestions: []
+  };
+  
+  // Check for minimum viable analysis
+  if (analysis.methods.eventHandlers.length === 0) {
+    validation.warnings.push('No event handlers found - limited interaction testing possible');
+  }
+  
+  if (analysis.data.initialState.length === 0) {
+    validation.warnings.push('No data properties found - limited state testing possible');
+  }
+  
+  if (analysis.props.requiredProps.length === 0) {
+    validation.suggestions.push('Consider adding prop validation for better component API');
+  }
+  
+  return validation;
+}
+```
+description:
+globs:
+alwaysApply: true
+---

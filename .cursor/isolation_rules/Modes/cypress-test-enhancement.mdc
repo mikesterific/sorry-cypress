@@ -1,0 +1,626 @@
+# Test Enhancement Templates for CYPRESS TESTING MODE
+
+This document defines the enhancement patterns and templates for transforming browser-event-recorder MCP baseline tests into production-ready Cypress tests with intelligent assertions and established project patterns.
+
+## TEST ENHANCEMENT ARCHITECTURE
+
+```mermaid
+graph TD
+    subgraph "⚡ TEST ENHANCEMENT PIPELINE"
+        
+        subgraph "📊 BASELINE ANALYSIS"
+            AnalyzeBaseline["🔍 Analyze MCP Baseline<br>- Test structure<br>- Basic assertions<br>- Selector patterns<br>- Action sequences"]
+            ExtractActions["📋 Extract User Actions<br>- Click events<br>- Input events<br>- Navigation events<br>- Form submissions"]
+            IdentifyGaps["🎯 Identify Enhancement Gaps<br>- Missing assertions<br>- Generic selectors<br>- No state verification<br>- Limited error handling"]
+        end
+        
+        subgraph "🧠 INTELLIGENT ENHANCEMENT"
+            EnhanceAssertions["✅ Enhance Assertions<br>- State verification<br>- UI validation<br>- API call checks<br>- Error conditions"]
+            ApplyPatterns["📋 Apply Project Patterns<br>- Naming conventions<br>- Import statements<br>- Custom commands<br>- Setup/cleanup"]
+            IntegrateLocators["🔗 Integrate Locators<br>- Centralized LOCATORS<br>- Data-testid usage<br>- Selector optimization"]
+            AddErrorHandling["⚠️ Add Error Handling<br>- Known issue patterns<br>- Graceful failures<br>- Retry mechanisms"]
+        end
+        
+        subgraph "🎯 PATTERN APPLICATION"
+            ApplyNaming["📝 Apply Naming<br>XX.x - Feature - Suite"]
+            AddImports["📥 Add Imports<br>LOCATORS & commands"]
+            AddSetup["⚙️ Add Setup/Cleanup<br>setupTestEnvironment<br>cleanupEnvironment"]
+            OptimizeStructure["🏗️ Optimize Structure<br>Test organization<br>Assertion grouping"]
+        end
+        
+        subgraph "✅ QUALITY VALIDATION"
+            ValidatePatterns["📏 Validate Patterns<br>Convention compliance"]
+            ValidateQuality["🔍 Validate Quality<br>Assertion completeness"]
+            ValidateCoverage["📊 Validate Coverage<br>Test thoroughness"]
+            FinalReview["🎯 Final Review<br>Production readiness"]
+        end
+    end
+    
+    AnalyzeBaseline --> ExtractActions
+    ExtractActions --> IdentifyGaps
+    IdentifyGaps --> EnhanceAssertions
+    
+    EnhanceAssertions --> ApplyPatterns
+    ApplyPatterns --> IntegrateLocators
+    IntegrateLocators --> AddErrorHandling
+    
+    AddErrorHandling --> ApplyNaming
+    ApplyNaming --> AddImports
+    AddImports --> AddSetup
+    AddSetup --> OptimizeStructure
+    
+    OptimizeStructure --> ValidatePatterns
+    ValidatePatterns --> ValidateQuality
+    ValidateQuality --> ValidateCoverage
+    ValidateCoverage --> FinalReview
+
+    %% Styling
+    style AnalyzeBaseline fill:#e3f2fd
+    style EnhanceAssertions fill:#fff3e0
+    style ApplyNaming fill:#fce4ec
+    style ValidatePatterns fill:#e8f5e8
+```
+
+## BASELINE ANALYSIS PATTERNS
+
+### MCP Baseline Structure Analysis
+```javascript
+function analyzeMCPBaseline(baselineTest) {
+  return {
+    structure: analyzeTestStructure(baselineTest),
+    actions: extractUserActions(baselineTest),
+    selectors: analyzeSelectorPatterns(baselineTest),
+    assertions: analyzeExistingAssertions(baselineTest),
+    gaps: identifyEnhancementOpportunities(baselineTest)
+  };
+}
+
+// Extract user actions from MCP baseline
+function extractUserActions(baselineTest) {
+  const actions = [];
+  
+  // Parse test code for Cypress commands
+  const cypressCommands = extractCypressCommands(baselineTest);
+  
+  for (const command of cypressCommands) {
+    if (command.includes('.click()')) {
+      actions.push({
+        type: 'click',
+        selector: extractSelector(command),
+        line: command.line,
+        enhancement: 'add_state_verification'
+      });
+    }
+    
+    if (command.includes('.type(') || command.includes('.clear()')) {
+      actions.push({
+        type: 'input',
+        selector: extractSelector(command),
+        value: extractInputValue(command),
+        line: command.line,
+        enhancement: 'add_validation_check'
+      });
+    }
+    
+    if (command.includes('.submit()')) {
+      actions.push({
+        type: 'submit',
+        selector: extractSelector(command),
+        line: command.line,
+        enhancement: 'add_submission_verification'
+      });
+    }
+  }
+  
+  return actions;
+}
+
+// Identify enhancement opportunities
+function identifyEnhancementOpportunities(baselineTest) {
+  const gaps = [];
+  
+  // Check for missing pattern compliance
+  if (!baselineTest.includes('LOCATORS')) {
+    gaps.push({
+      type: 'locator_integration',
+      priority: 'high',
+      description: 'Not using centralized LOCATORS object'
+    });
+  }
+  
+  if (!baselineTest.includes('setupTestEnvironment')) {
+    gaps.push({
+      type: 'setup_commands',
+      priority: 'high', 
+      description: 'Missing custom setup commands'
+    });
+  }
+  
+  // Check for assertion quality
+  const assertionCount = countAssertions(baselineTest);
+  const actionCount = countActions(baselineTest);
+  
+  if (assertionCount < actionCount * 0.5) {
+    gaps.push({
+      type: 'assertion_coverage',
+      priority: 'medium',
+      description: 'Insufficient assertions for user actions'
+    });
+  }
+  
+  return gaps;
+}
+```
+
+## ENHANCEMENT TEMPLATES
+
+### 1. Click Action Enhancement Template
+```javascript
+// MCP Baseline (Basic)
+cy.get('[data-testid="submit-button"]').click();
+
+// Enhanced with Component Intelligence
+function enhanceClickAction(action, componentAnalysis) {
+  const clickMethod = findClickMethod(action.selector, componentAnalysis);
+  const expectedOutcome = predictClickOutcome(clickMethod, componentAnalysis);
+  
+  return `
+    // Click action with state verification
+    cy.get(LOCATORS.${convertToLocatorName(action.selector)}).click();
+    
+    ${generateStateAssertions(expectedOutcome)}
+    ${generateUIAssertions(expectedOutcome)}
+    ${generateAPIAssertions(expectedOutcome)}
+  `;
+}
+
+// State assertion generation
+function generateStateAssertions(outcome) {
+  if (outcome.type === 'state_mutation') {
+    return `
+    // Verify state changes
+    cy.window().its('app.$data.${outcome.property}').should('eq', ${outcome.expectedValue});
+    `;
+  }
+  
+  if (outcome.type === 'boolean_toggle') {
+    return `
+    // Verify boolean state toggle
+    cy.get('[data-testid="${outcome.property}-indicator"]').should('${outcome.expectedValue ? 'be.visible' : 'not.exist'}');
+    `;
+  }
+  
+  return '';
+}
+```
+
+### 2. Form Input Enhancement Template
+```javascript
+// MCP Baseline (Basic)
+cy.get('[data-testid="email-input"]').type('test@example.com');
+
+// Enhanced with Validation Intelligence  
+function enhanceInputAction(action, componentAnalysis) {
+  const validationRules = findValidationRules(action.selector, componentAnalysis);
+  
+  return `
+    // Input action with validation verification
+    cy.get(LOCATORS.${convertToLocatorName(action.selector)})
+      .clear()
+      .type('${action.value}');
+    
+    ${generateValidationAssertions(validationRules)}
+    ${generateInputStateAssertions(action, componentAnalysis)}
+  `;
+}
+
+function generateValidationAssertions(validationRules) {
+  if (validationRules.required) {
+    return `
+    // Verify required field validation
+    cy.get(LOCATORS.${validationRules.errorSelector}).should('not.exist');
+    `;
+  }
+  
+  if (validationRules.format) {
+    return `
+    // Verify format validation
+    cy.get(LOCATORS.${validationRules.fieldSelector}).should('have.class', 'valid');
+    `;
+  }
+  
+  return '';
+}
+```
+
+### 3. Form Submission Enhancement Template
+```javascript
+// MCP Baseline (Basic)
+cy.get('form').submit();
+
+// Enhanced with Comprehensive Verification
+function enhanceSubmitAction(action, componentAnalysis) {
+  const submitMethod = findSubmitMethod(componentAnalysis);
+  const expectedOutcome = predictSubmitOutcome(submitMethod, componentAnalysis);
+  
+  return `
+    // Form submission with comprehensive verification
+    cy.get(LOCATORS.${convertToLocatorName(action.selector)}).submit();
+    
+    ${generateLoadingStateAssertions(expectedOutcome)}
+    ${generateAPICallAssertions(expectedOutcome)}
+    ${generateSuccessAssertions(expectedOutcome)}
+    ${generateErrorHandlingAssertions(expectedOutcome)}
+  `;
+}
+
+function generateAPICallAssertions(outcome) {
+  if (outcome.type === 'api_call') {
+    return `
+    // Verify API call
+    cy.intercept('${outcome.method}', '${outcome.endpoint}').as('${outcome.alias}');
+    cy.wait('@${outcome.alias}').should((interception) => {
+      expect(interception.response.statusCode).to.equal(200);
+      expect(interception.request.body).to.include.keys(${outcome.expectedFields});
+    });
+    `;
+  }
+  
+  return '';
+}
+```
+
+## PATTERN APPLICATION TEMPLATES
+
+### Naming Convention Template
+```javascript
+function applyNamingConventions(testSuite, componentName) {
+  // Extract next available test suite number
+  const suiteNumber = getNextSuiteNumber();
+  
+  return `
+describe('${suiteNumber}.x - ${componentName} - Enhanced Test Suite', () => {
+  ${testSuite.testCases.map((testCase, index) => `
+  it('${suiteNumber}.${index + 1}.1: ${generateTestDescription(testCase)}', () => {
+    ${testCase.enhancedCode}
+  });
+  `).join('\n')}
+});
+  `;
+}
+
+function generateTestDescription(testCase) {
+  // Generate descriptive test names based on actions
+  const mainAction = testCase.actions[0];
+  
+  switch (mainAction.type) {
+    case 'click':
+      return `Should handle ${mainAction.element} click with proper state changes`;
+    case 'input':
+      return `Should validate ${mainAction.element} input and update state`;
+    case 'submit':
+      return `Should submit form and handle response appropriately`;
+    default:
+      return `Should perform ${mainAction.type} action successfully`;
+  }
+}
+```
+
+### Import Statements Template
+```javascript
+function generateEnhancedImports(baselineTest, componentAnalysis) {
+  const imports = [
+    "import { LOCATORS } from '../../locators/locators';",
+    "import '../../../support/commands';"
+  ];
+  
+  // Add conditional imports based on component analysis
+  if (componentAnalysis.hasSocketEvents) {
+    imports.push("import 'cypress-real-events';");
+  }
+  
+  if (componentAnalysis.hasFileUploads) {
+    imports.push("// Using native Cypress selectFile instead of cypress-file-upload");
+  }
+  
+  return imports.join('\n');
+}
+```
+
+### Setup/Cleanup Template
+```javascript
+function generateSetupCleanup(componentAnalysis) {
+  return `
+  before(() => {
+    cy.setupTestEnvironment();
+    ${generateComponentSpecificSetup(componentAnalysis)}
+  });
+
+  beforeEach(() => {
+    cy.cleanupEnvironment().then(() => {
+      cy.log('Environment cleanup completed');
+    });
+    ${generateTestSpecificSetup(componentAnalysis)}
+  });
+
+  after(() => {
+    cy.cleanupEnvironment();
+    ${generateComponentSpecificCleanup(componentAnalysis)}
+  });
+  `;
+}
+
+function generateComponentSpecificSetup(componentAnalysis) {
+  const setup = [];
+  
+  if (componentAnalysis.needsAuthentication) {
+    setup.push('cy.login();');
+  }
+  
+  if (componentAnalysis.needsDataSeeding) {
+    setup.push('cy.seedTestData();');
+  }
+  
+  if (componentAnalysis.needsMockAPI) {
+    setup.push(`
+    // Setup API mocks
+    cy.intercept('GET', '/api/**').as('apiCall');
+    `);
+  }
+  
+  return setup.join('\n    ');
+}
+```
+
+## LOCATOR INTEGRATION TEMPLATES
+
+### Centralized Locator Integration
+```javascript
+function integrateWithCentralizedLocators(baselineTest, existingLocators) {
+  const selectorMappings = generateSelectorMappings(baselineTest, existingLocators);
+  
+  let enhancedTest = baselineTest;
+  
+  // Replace generic selectors with LOCATORS references
+  for (const mapping of selectorMappings) {
+    const genericSelector = mapping.original;
+    const locatorReference = `LOCATORS.${mapping.locatorName}`;
+    
+    enhancedTest = enhancedTest.replace(
+      new RegExp(escapeRegExp(genericSelector), 'g'),
+      locatorReference
+    );
+  }
+  
+  return enhancedTest;
+}
+
+function generateSelectorMappings(baselineTest, existingLocators) {
+  const selectors = extractSelectors(baselineTest);
+  const mappings = [];
+  
+  for (const selector of selectors) {
+    // Try to find existing locator
+    const existingLocator = findMatchingLocator(selector, existingLocators);
+    
+    if (existingLocator) {
+      mappings.push({
+        original: selector,
+        locatorName: existingLocator.name
+      });
+    } else {
+      // Generate suggestion for new locator
+      mappings.push({
+        original: selector,
+        locatorName: generateLocatorName(selector),
+        suggestion: true,
+        newLocatorDefinition: `${generateLocatorName(selector)}: '${selector}'`
+      });
+    }
+  }
+  
+  return mappings;
+}
+```
+
+### Data-TestID Optimization
+```javascript
+function optimizeDataTestIds(baselineTest, componentAnalysis) {
+  const optimizations = [];
+  
+  // Find selectors that could benefit from data-testid
+  const selectors = extractSelectors(baselineTest);
+  
+  for (const selector of selectors) {
+    if (shouldUseDataTestId(selector)) {
+      const dataTestIdValue = generateDataTestId(selector, componentAnalysis);
+      
+      optimizations.push({
+        original: selector,
+        optimized: `[data-testid="${dataTestIdValue}"]`,
+        suggestion: `Add data-testid="${dataTestIdValue}" to component template`,
+        priority: calculateDataTestIdPriority(selector) // Uses MCP 1.5 factor
+      });
+    }
+  }
+  
+  return optimizations;
+}
+
+function calculateDataTestIdPriority(selector) {
+  // Implement MCP's 1.5 priority factor for data-testid
+  const baseScore = getBaseSelectorScore(selector);
+  const dataTestIdBonus = 1.5;
+  
+  return baseScore * dataTestIdBonus;
+}
+```
+
+## ERROR HANDLING TEMPLATES
+
+### Known Issue Pattern Handling
+```javascript
+function addKnownIssueHandling(enhancedTest) {
+  return `
+${enhancedTest}
+
+// Error handling for known issues
+Cypress.on('uncaught:exception', (err) => {
+  // Ignore RFB connection errors (noVNC related)
+  if (err.message.includes('this.rfb.connect is not a function')) {
+    return false;
+  }
+  
+  // Ignore postMessage errors from third-party scripts
+  if (err.message.includes('postMessage')) {
+    return false;
+  }
+  
+  // Ignore i18n decorator errors
+  if (err.message.includes('Target is undefined. Use @i18ns() decorator')) {
+    return false;
+  }
+  
+  return true;
+});
+  `;
+}
+```
+
+### Retry and Recovery Templates
+```javascript
+function addRetryMechanisms(enhancedTest, componentAnalysis) {
+  // Add retry logic for flaky interactions
+  const retryPatterns = identifyRetryNeeds(componentAnalysis);
+  
+  let enhancedWithRetries = enhancedTest;
+  
+  for (const pattern of retryPatterns) {
+    if (pattern.type === 'api_dependent') {
+      enhancedWithRetries = addAPIRetryPattern(enhancedWithRetries, pattern);
+    }
+    
+    if (pattern.type === 'ui_timing') {
+      enhancedWithRetries = addTimingRetryPattern(enhancedWithRetries, pattern);
+    }
+  }
+  
+  return enhancedWithRetries;
+}
+
+function addAPIRetryPattern(test, pattern) {
+  return test.replace(
+    pattern.originalAssertion,
+    `
+    // API-dependent assertion with retry
+    cy.get('${pattern.selector}', { timeout: 10000 }).should('${pattern.condition}');
+    `
+  );
+}
+```
+
+## QUALITY VALIDATION TEMPLATES
+
+### Pattern Compliance Validation
+```javascript
+function validatePatternCompliance(enhancedTest) {
+  const validation = {
+    compliant: true,
+    violations: [],
+    suggestions: []
+  };
+  
+  // Check naming convention
+  if (!enhancedTest.includes('describe(')) {
+    validation.violations.push({
+      type: 'naming_convention',
+      message: 'Test suite missing proper describe block with naming convention'
+    });
+  }
+  
+  // Check import statements
+  if (!enhancedTest.includes("import { LOCATORS }")) {
+    validation.violations.push({
+      type: 'import_pattern',
+      message: 'Missing centralized LOCATORS import'
+    });
+  }
+  
+  // Check custom commands
+  if (!enhancedTest.includes('setupTestEnvironment')) {
+    validation.suggestions.push({
+      type: 'custom_commands',
+      message: 'Consider using setupTestEnvironment for consistent test setup'
+    });
+  }
+  
+  return validation;
+}
+```
+
+### Coverage Estimation
+```javascript
+function estimateCoverageContribution(enhancedTest, componentAnalysis) {
+  const coverage = {
+    lines: 0,
+    branches: 0,
+    functions: 0,
+    statements: 0
+  };
+  
+  // Analyze test actions against component structure
+  const testActions = extractTestActions(enhancedTest);
+  
+  for (const action of testActions) {
+    // Estimate line coverage
+    const coveredLines = estimateLineCoverage(action, componentAnalysis);
+    coverage.lines += coveredLines;
+    
+    // Estimate function coverage
+    const coveredFunctions = estimateFunctionCoverage(action, componentAnalysis);
+    coverage.functions += coveredFunctions;
+  }
+  
+  return {
+    estimated: coverage,
+    percentage: calculateCoveragePercentage(coverage, componentAnalysis),
+    meetsThreshold: coverage.percentage >= 0.8 // 80% requirement
+  };
+}
+```
+
+## COMPLETE ENHANCEMENT PIPELINE
+
+### End-to-End Enhancement Process
+```javascript
+function enhanceCompleteTest(mcpBaseline, componentAnalysis, memoryBankContext) {
+  // Phase 1: Analyze baseline
+  const baselineAnalysis = analyzeMCPBaseline(mcpBaseline);
+  
+  // Phase 2: Generate enhancements
+  const enhancements = generateIntelligentEnhancements(baselineAnalysis, componentAnalysis);
+  
+  // Phase 3: Apply patterns
+  const patternEnhanced = applyProjectPatterns(enhancements, memoryBankContext);
+  
+  // Phase 4: Integrate locators
+  const locatorIntegrated = integrateWithCentralizedLocators(patternEnhanced, memoryBankContext.locators);
+  
+  // Phase 5: Add error handling
+  const errorHandlingAdded = addErrorHandling(locatorIntegrated, memoryBankContext.knownIssues);
+  
+  // Phase 6: Validate quality
+  const validation = validateEnhancedTest(errorHandlingAdded, componentAnalysis);
+  
+  return {
+    enhancedTest: errorHandlingAdded,
+    validation: validation,
+    suggestions: generateImprovementSuggestions(validation),
+    coverageEstimate: estimateCoverageContribution(errorHandlingAdded, componentAnalysis)
+  };
+}
+```
+description:
+globs:
+alwaysApply: true
+---
